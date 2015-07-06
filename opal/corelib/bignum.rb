@@ -9,7 +9,7 @@ class Bignum
   include Comparable
 
   def self.create_bignum(other)
-    bignum `new forge.jsbn.BigInteger(#{other.to_s}, 10)`
+    bignum `new BigInteger(#{other.to_s}, 10)`
   end
 
   def self.numbers_for_radix(radix)
@@ -30,7 +30,7 @@ class Bignum
     x = string.match("^([\-|\+]?[#{numbers_for_radix(radix)}]*)")
     value = "0"
     value = x[0] if x && x[0] && x[0] != "" && x[0] != "-" && x[0] != "+"
-    bignum `new forge.jsbn.BigInteger(#{value}, #{radix})`
+    bignum `new BigInteger(#{value}, #{radix})`
   end
 
   def self.bignum(value)
@@ -89,6 +89,7 @@ class Bignum
   end
 
   def <=>(other)
+    return 1 if other == -Float::INFINITY && self < 0
     this, other = unwrapp_values(:<=>, other) 
     calculate_compare_result `#{this}.compareTo(#{other})`
   rescue TypeError, ArgumentError
@@ -156,8 +157,8 @@ class Bignum
     return calculate_as_float(:**, other) if is_float(other)
     # result cann only be 1 if x^0 or 1^x
     # nevertheless result is 1 number is to big => infinity
+    return 1 if `#{wrapped_value_of(self)}.intValue()` == 1 
     return 1 if other == 0
-    return 1 if other.abs() == 1 
     result = call_js_method_with_arg this_unwrapped, :pow, other_unwrapped
     # return infinity if result is to big
     return `Infinity` if `#{result}.intValue()` == 1
@@ -190,7 +191,7 @@ class Bignum
     jsmethod = jsmethod_less_zero if count < 0
 
     count = count.abs
-    newJsBignum = `new forge.jsbn.BigInteger("0", 10)`
+    newJsBignum = `new BigInteger("0", 10)`
     `#{value}[#{jsmethod}](#{count}, #{newJsBignum})`
     bignum_or_integer newJsBignum
   end
@@ -212,15 +213,21 @@ class Bignum
   end
 
   alias kind_of? is_a?
+
   def is_float(other)
     return other % 1 != 0 if other.kind_of? Numeric
     return false
   end
 
+  def integer?
+    return self % 1 == 0
+  end
+
   def coerce(other)
-    raise TypeError, "#{other.class} can't be coerced into Bignum" unless other.kind_of?(Numeric) && !is_float(other)
-    other = `new forge.jsbn.BigInteger(#{other.to_s}, 10)` if other.kind_of?(Numeric)
-    [bignum(other), self]
+    raise TypeError, "#{other.class} can't be coerced into Bignum" unless other.kind_of?(Numeric) 
+    return [other, self.to_s.to_f] unless other.integer?
+    other = bignum(`new BigInteger(#{other.to_s}, 10)`)
+    [other, self]
   end
 
   def eql?(other)
@@ -254,8 +261,9 @@ class Bignum
   end
 
   def to_i
-    `#{value}.intValue()`
+    self
   end
+  alias :to_int :to_i
 
   def to_f
     self.to_s.to_f
@@ -264,6 +272,7 @@ class Bignum
   def succ
     self + 1
   end
+  alias :next :succ
 
   def pred
     self - 1
@@ -275,6 +284,22 @@ class Bignum
 
   def odd?
     !even?
+  end
+  
+  def round(ndigits=0)
+    self
+  end
+
+  def ceil
+    self
+  end
+
+  def floor
+    self
+  end
+
+  def ord
+    self
   end
 
   def ===(other)
@@ -299,7 +324,7 @@ class Bignum
 
   def wrapped_value_of(other)
       return other.value if other.kind_of?(Bignum)
-      return `new forge.jsbn.BigInteger(#{other.to_s}, 10)` if other.kind_of?(Numeric)
+      return `new BigInteger(#{other.to_s}, 10)` if other.kind_of?(Numeric)
   end
 
   def binary_operation_integer(method_sign, jsmethod, other)
@@ -316,7 +341,7 @@ class Bignum
   def bignum_or_integer(value)
     big = bignum value
     return big if big > Opal::MAX_INTEGER || big < Opal::MIN_INTEGER
-    big.to_i
+    `value.intValue()`
   end
 
   def bignum(value)

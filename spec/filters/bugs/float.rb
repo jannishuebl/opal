@@ -21,6 +21,7 @@ opal_filter "Float" do
   fails "Float#CONSTANTS the MANT_DIG is 53"
   fails "Float#CONSTANTS the MAX_10_EXP is 308"
   fails "Float#CONSTANTS the MIN_10_EXP is -308"
+  fails "Float#CONSTANTS the MAX is 1.79769313486232e+308"
   fails "Float#CONSTANTS the MAX_EXP is 1024"
   fails "Float#CONSTANTS the MIN_EXP is -1021"
   fails "Float#CONSTANTS the MIN is 2.2250738585072e-308"

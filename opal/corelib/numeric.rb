@@ -237,10 +237,8 @@ class Numeric
     %x{
       if (other.$$is_number) {
         var result =  Math.pow(self, other);
-        if(other % 1 == 0 && (result > #{Opal::MAX_INTEGER} || result < #{Opal::MIN_INTEGER})) {
-          var bignum = #{Bignum.new}
-          bignum.value = new forge.jsbn.BigInteger(this.toString(), 10);
-          return #{`bignum` ** `other`};
+        if(#{self.integer? && other.integer?} && (result > #{Opal::MAX_INTEGER} || result < #{Opal::MIN_INTEGER})) {
+          return #{Bignum.create_bignum(self) ** `other`};
         }
         return result;
       }

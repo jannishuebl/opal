@@ -47,10 +47,6 @@ Address all questions regarding this license to:
   tjw@cs.Stanford.EDU
 */
 
-(function() {
-/* ########## Begin module implementation ########## */
-function initModule(forge) {
-
 // Bits per digit
 var dbits;
 
@@ -143,7 +139,7 @@ BigInteger.prototype.F2 = 2*dbits-BI_FP;
 
 // Digit conversions
 var BI_RM = "0123456789abcdefghijklmnopqrstuvwxyz";
-var BI_RC = new Array();
+var BI_RC = [];
 var rr,vv;
 rr = "0".charCodeAt(0);
 for(vv = 0; vv <= 9; ++vv) BI_RC[rr++] = vv;
@@ -705,7 +701,7 @@ if("number" == typeof b) {
  }
 } else {
  // new BigInteger(int,RNG)
- var x = new Array(), t = a&7;
+ var x = [], t = a&7;
  x.length = (a>>3)+1;
  b.nextBytes(x);
  if(t > 0) x[0] &= ((1<<t)-1); else x[0] = 0;
@@ -715,7 +711,7 @@ if("number" == typeof b) {
 
 //(public) convert to bigendian byte array
 function bnToByteArray() {
-var i = this.t, r = new Array();
+var i = this.t, r = [];
 r[0] = this.s;
 var p = this.DB-(i*this.DB)%8, d, k = 0;
 if(i-- > 0) {
@@ -1025,7 +1021,7 @@ else
  z = new Montgomery(m);
 
 // precomputation
-var g = new Array(), n = 3, k1 = k-1, km = (1<<k)-1;
+var g = [], n = 3, k1 = k-1, km = (1<<k)-1;
 g[1] = z.convert(this);
 if(k > 1) {
  var g2 = nbi();
@@ -1262,66 +1258,3 @@ BigInteger.prototype.isProbablePrime = bnIsProbablePrime;
 //int hashCode()
 //long longValue()
 //static BigInteger valueOf(long val)
-
-forge.jsbn = forge.jsbn || {};
-forge.jsbn.BigInteger = BigInteger;
-
-} // end module implementation
-
-    if(typeof forge === 'undefined') {
-      forge = {};
-    }
-    return initModule(forge);
-
-/* ########## Begin module wrapper ########## */
-var name = 'jsbn';
-if(typeof define !== 'function') {
-  // NodeJS -> AMD
-  if(typeof module === 'object' && module.exports) {
-    var nodeJS = true;
-    define = function(ids, factory) {
-      factory(require, module);
-    };
-  } else {
-    // <script>
-    if(typeof forge === 'undefined') {
-      forge = {};
-    }
-    return initModule(forge);
-  }
-}
-// AMD
-var deps;
-var defineFunc = function(require, module) {
-  module.exports = function(forge) {
-    var mods = deps.map(function(dep) {
-      return require(dep);
-    }).concat(initModule);
-    // handle circular dependencies
-    forge = forge || {};
-    forge.defined = forge.defined || {};
-    if(forge.defined[name]) {
-      return forge[name];
-    }
-    forge.defined[name] = true;
-    for(var i = 0; i < mods.length; ++i) {
-      mods[i](forge);
-    }
-    return forge[name];
-  };
-};
-var tmpDefine = define;
-define = function(ids, factory) {
-  deps = (typeof ids === 'string') ? factory.slice(2) : ids.slice(2);
-  if(nodeJS) {
-    delete define;
-    return tmpDefine.apply(null, Array.prototype.slice.call(arguments, 0));
-  }
-  define = tmpDefine;
-  return define.apply(null, Array.prototype.slice.call(arguments, 0));
-};
-define(['require', 'module'], function() {
-  defineFunc.apply(null, Array.prototype.slice.call(arguments, 0));
-});
-
-})();
