@@ -73,7 +73,7 @@ task :mspec_node do
   stubs = '-smspec/helpers/tmp -smspec/helpers/environment -smspec/guards/block_device -smspec/guards/endian'
 
   sh "ruby -rbundler/setup -rmspec/opal/special_calls "\
-     "bin/opal -gmspec #{include_paths} #{stubs} -rnodejs/io -rnodejs/kernel -Dwarning -A #{filename} -c > #{js_filename}"
+     "bin/opal -gmspec #{include_paths} #{stubs} -rnodejs/io -rnodejs/kernel -Dwarning -P -B -A #{filename} -c > #{js_filename}"
   sh "jshint --verbose #{js_filename}"
   sh "NODE_PATH=stdlib/nodejs/node_modules node #{js_filename}"
 

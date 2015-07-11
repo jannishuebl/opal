@@ -155,9 +155,11 @@ class Bignum
   def **(other)
     this_unwrapped, other_unwrapped = unwrapp_values(:**, other)
     return calculate_as_float(:**, other) if is_float(other)
-    # result cann only be 1 if x^0 or 1^x
+    # result cann only be 1 if x^0 or 1^x or -1^x where x is even
     # nevertheless result is 1 number is to big => infinity
     return 1 if `#{wrapped_value_of(self)}.intValue()` == 1 
+    return 1 if `#{wrapped_value_of(self)}.intValue()` == -1 && other.even?
+    return -1 if `#{wrapped_value_of(self)}.intValue()` == -1 && other.odd?
     return 1 if other == 0
     result = call_js_method_with_arg this_unwrapped, :pow, other_unwrapped
     # return infinity if result is to big
@@ -340,7 +342,7 @@ class Bignum
 
   def bignum_or_integer(value)
     big = bignum value
-    return big if big > Opal::MAX_INTEGER || big < Opal::MIN_INTEGER
+    return big unless Fixnum.fits_in(big)
     `value.intValue()`
   end
 

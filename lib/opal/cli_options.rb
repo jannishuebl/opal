@@ -112,6 +112,11 @@ module Opal
         options[:arity_check] = true
       end
 
+      on('-B', 'Enable inline Operators') do
+        options[:inline_operators] = false
+      end
+
+
       on('-V', 'Enable inline Operators') do
         options[:inline_operators] = true
       end

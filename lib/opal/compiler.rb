@@ -5,11 +5,6 @@ require 'opal/nodes'
 
 module Opal
 
-  # Sets the maxium and minum value that is stored in an Integer.
-  # Values below or above are converted to Bignums
-  MAX_INTEGER = 1073741822 + 1
-  MIN_INTEGER = -1073741823 - 1 
-
   # Compile a string of ruby code into javascript.
   #
   # @example

@@ -1,14 +1,6 @@
 require 'corelib/comparable'
 require 'corelib/bignum'
 
-module Opal
-
-  # Sets the maxium and minum value that is stored in an Integer.
-  # Values below or above are converted to Bignums
-  MAX_INTEGER = 1073741822 + 1
-  MIN_INTEGER = -1073741823 - 1 
-end
-
 class Numeric
   include Comparable
 
@@ -54,7 +46,7 @@ class Numeric
   def +(other)
     %x{
       if (other.$$is_number) {
-        return self + other;
+        return #{handle_overflow :+, other, `self + other`};
       }
       else {
         return #{send_coerced :+, other};
@@ -65,7 +57,7 @@ class Numeric
   def -(other)
     %x{
       if (other.$$is_number) {
-        return self - other;
+        return #{handle_overflow :-, other, `self - other`};
       }
       else {
         return #{send_coerced :-, other};
@@ -76,7 +68,7 @@ class Numeric
   def *(other)
     %x{
       if (other.$$is_number) {
-        return self * other;
+        return #{handle_overflow :*, other, `self * other`};
       }
       else {
         return #{send_coerced :*, other};
@@ -204,13 +196,11 @@ class Numeric
   end
 
   def <<(count)
-    selfBignum = Bignum.create_bignum self
-    selfBignum << count
+    Bignum.create_bignum(self) << count
   end
 
   def >>(count)
-    selfBignum = Bignum.create_bignum self
-    selfBignum >> count
+    Bignum.create_bignum(self) >> count
   end
 
   def [](bit)
@@ -236,16 +226,17 @@ class Numeric
   def **(other)
     %x{
       if (other.$$is_number) {
-        var result =  Math.pow(self, other);
-        if(#{self.integer? && other.integer?} && (result > #{Opal::MAX_INTEGER} || result < #{Opal::MIN_INTEGER})) {
-          return #{Bignum.create_bignum(self) ** `other`};
-        }
-        return result;
+        return #{handle_overflow :**, other, `Math.pow(self, other)`};
       }
       else {
         return #{send_coerced :**, other};
       }
     }
+  end
+
+  def handle_overflow(method, other, result)
+    return result if !self.integer? || !other.integer? || Fixnum.fits_in(result)
+    Bignum.create_bignum(self).send method, other
   end
 
   def ==(other)
@@ -384,7 +375,7 @@ class Numeric
   alias modulo %
 
   def next
-    `self + 1`
+    self + 1
   end
 
   def nonzero?
@@ -400,7 +391,7 @@ class Numeric
   end
 
   def pred
-    `self - 1`
+    self - 1
   end
 
   def round(ndigits=0)
@@ -544,6 +535,15 @@ class Numeric
 end
 
 Fixnum = Numeric
+
+class Fixnum 
+  MAX = 9007199254740991
+  MIN = -9007199254740991
+
+  def self.fits_in(number)
+    number <= MAX && number >= MIN
+  end
+end
 
 class Integer < Numeric
   def self.===(other)

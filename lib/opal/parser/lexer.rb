@@ -2,6 +2,10 @@ require 'opal/regexp_anchors'
 require 'strscan'
 require 'opal/parser/keywords'
 
+class Fixnum
+  MAX = 9007199254740991
+end
+
 module Opal
   # {Opal::Lexer} is used by {Opal::Parser} to step through ruby code, and
   # returning tokens representing each chunk of ruby code.
@@ -217,27 +221,27 @@ module Opal
         return :tFLOAT
       elsif scan(/([^0][\d_]*|0)\b/)                                 # BASE 10
         integer = scanner.matched.gsub(/_/, '').to_i
-        return process_bignum(integer,scanner.matched.gsub(/_/, ''))
+        return fixnum_or_bignumber(integer,scanner.matched.gsub(/_/, ''))
       elsif scan(/0[bB](0|1|_)+/)                                    # BASE 2
         integer = scanner.matched.to_i(2)
-        return process_bignum(integer, scanner.matched)
+        return fixnum_or_bignumber(integer, scanner.matched)
       elsif scan(/0[xX](\d|[a-f]|[A-F]|_)+/)                         # BASE 16
         integer = scanner.matched.to_i(16)
-        return process_bignum(integer, scanner.matched)
+        return fixnum_or_bignumber(integer, scanner.matched)
       elsif scan(/0[oO]?([0-7]|_)+/)                                 # BASE 8
         integer = scanner.matched.to_i(8)
-        return process_bignum(integer, scanner.matched)
+        return fixnum_or_bignumber(integer, scanner.matched)
       elsif scan(/0[dD]([0-9]|_)+/)                                  # BASE 10
         integer = scanner.matched.gsub(/_/, '').to_i
-        return process_bignum(integer,scanner.matched.gsub(/_/, ''))
+        return fixnum_or_bignumber(integer,scanner.matched.gsub(/_/, ''))
       else
         raise "Lexing error on numeric type: `#{scanner.peek 5}`"
       end
     end
 
 
-    def process_bignum(integer, string)
-      if integer > Opal::MAX_INTEGER || integer < Opal::MIN_INTEGER
+    def fixnum_or_bignumber(integer, string)
+      if integer > Fixnum::MAX
         self.yylval = "#{integer}"
           return :tBIGNUM
         end

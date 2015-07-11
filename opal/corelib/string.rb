@@ -1241,10 +1241,11 @@ class String
       }
       var number_str = string.replace(/_(?!_)/g, '')
       result = parseInt(number_str, radix);
-      if ( result > #{Opal::MAX_INTEGER} || result < #{Opal::MIN_INTEGER}) {
-       return #{Bignum.create_from_string(`number_str`, `radix`)};
+      if ( #{Fixnum.fits_in(`result`)} ) {
+        return isNaN(result) ? 0 : result;
+      } else {
+        return #{Bignum.create_from_string(`number_str`, `radix`)};
       }
-      return isNaN(result) ? 0 : result;
     }
   end
 
